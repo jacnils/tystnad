@@ -1,0 +1,130 @@
+name: Build Qt App (CMake)
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-macos-arm64:
+    name: Build macOS (Apple Silicon)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (macOS)
+        run: |
+          brew update
+          brew install qt python cmake ninja
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix qt)" >> $GITHUB_ENV
+
+      - name: Configure and Build (macOS Apple Silicon)
+        run: |
+          mkdir build && cd build
+          cmake .. -G Ninja -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH" -DCMAKE_BUILD_TYPE=Release
+          ninja
+
+      - name: Archive .app bundle
+        run: |
+          cd build
+          tar -czf tystnad.app.arm64.tar.gz tystnad.app
+
+      - name: Upload .app as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tystnad-app-macos-arm64
+          path: build/tystnad.app.arm64.tar.gz
+
+  build-macos-intel:
+    name: Build macOS (Intel)
+    runs-on: macos-13
+    env:
+      ARCH: x86_64
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (macOS Intel)
+        run: |
+          brew update
+          brew install qt python cmake ninja
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix qt)" >> $GITHUB_ENV
+
+      - name: Configure and Build (macOS Intel)
+        run: |
+          mkdir build
+          cd build
+          # Force x86_64 arch for cmake and ninja commands:
+          arch -x86_64 cmake .. -G Ninja -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH" -DCMAKE_BUILD_TYPE=Release
+          arch -x86_64 ninja
+
+      - name: Archive .app bundle
+        run: |
+          cd build
+          tar -czf tystnad.app.intel.tar.gz tystnad.app
+
+      - name: Upload .app as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tystnad-app-macos-intel
+          path: build/tystnad.app.intel.tar.gz
+
+  build-linux:
+    name: Build Linux (Intel)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qt6-base-dev libqt6svg6-dev \
+              libasound2-dev python3 cmake ninja-build wget fuse libfuse2 \
+              libglu1-mesa-dev freeglut3-dev mesa-common-dev qmake6
+
+      - name: Set CMAKE_PREFIX_PATH (Linux)
+        run: echo "CMAKE_PREFIX_PATH=/usr/lib/x86_64-linux-gnu/cmake" >> $GITHUB_ENV
+
+      - name: Configure and Build (Linux)
+        run: |
+          mkdir build && cd build
+          cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH"
+          ninja
+
+      - name: Prepare AppDir structure
+        run: |
+          mkdir -p AppDir/usr/bin
+          cp build/tystnad AppDir/usr/bin/
+          mkdir -p AppDir/usr/share/applications
+          cp cmake/tystnad.desktop AppDir/usr/share/applications/
+          mkdir -p AppDir/usr/share/icons/hicolor/scalable/apps
+          cp data/logo.svg AppDir/usr/share/icons/hicolor/scalable/apps/tystnad.svg
+
+      - name: Add Qt to PATH
+        run: |
+          export PATH=/usr/lib/qt6/bin:$PATH
+          echo "/usr/lib/qt6/bin" >> $GITHUB_PATH
+
+      - name: Download linuxdeployqt
+        run: |
+          wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
+          chmod +x linuxdeployqt-continuous-x86_64.AppImage
+
+      - name: Build AppImage
+        run: |
+          ./linuxdeployqt-continuous-x86_64.AppImage AppDir/usr/share/applications/tystnad.desktop -appimage -bundle-non-qt-libs -verbose=2
+
+      - name: Rename/move AppImage
+        run: |
+          APPIMAGE=$(find . -maxdepth 1 -name "*.AppImage" ! -name "linuxdeployqt-continuous-*" | head -n1)
+          echo "Found generated AppImage: $APPIMAGE"
+          mv "$APPIMAGE" tystnad.AppImage
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tystnad-appimage
+          path: tystnad.AppImage
