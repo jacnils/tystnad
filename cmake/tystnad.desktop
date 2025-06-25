@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Tystnad
+Exec=tystnad
+Icon=tystnad
+Comment=Silences annoying buzzing sounds from your audio output device
+Categories=AudioVideo;Player;Qt;Utility;
+Terminal=false
