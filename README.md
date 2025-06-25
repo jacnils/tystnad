@@ -13,14 +13,7 @@ This program aims to fix this annoyance, by playing an empty audio file continui
 
 Download a prebuilt binary from the 'Releases' tab.
 
-- `codesign --force --deep --sign - /Path/To/The/tystnad.app`
-- `xattr -rd com.apple.quarantine /Path/To/The/tystnad.app`
-
-The first command Ad-Hoc signs the app, the second command unquarantines it.
-
-## Installation (macOS, Intel)
-
-## Installation (Linux, AMD64)
+## Installation (Linux)
 
 If your distribution supports AppImages, you can download a prebuilt AppImage from the 'Releases' tab. 
 If it doesn't, or you have a different architecture, you must build it yourself.
