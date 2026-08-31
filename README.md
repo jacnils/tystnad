@@ -2,7 +2,7 @@
 
 # tystnad
 
-Simple program that prevents annoying buzz sounds from your receiver on macOS (and Linux?)
+Simple program that prevents annoying buzz sounds from your receiver on macOS and Linux
 
 ## Purpose
 
@@ -37,6 +37,12 @@ Finally, to install it:
 - Linux: Copy `build/tystnad` to `/usr/bin` (or `/usr/local/bin`)
 
 Note: If you don't specify your build type as Release, a .app will not be created. This is only relevant for macOS.
+
+## Linux Pipewire/Pulseaudio note
+
+If you are using Pipewire or Pulseaudio, and you're using a sink occupied by those (most common), you might get an error 
+stating that a device or resource is busy. This likely means you do not have pipewire-alsa or pulseaudio-alsa installed.
+These must be installed or this program to work properly.
 
 ## License
 
