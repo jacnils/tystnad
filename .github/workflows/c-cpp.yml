@@ -37,40 +37,6 @@ jobs:
           name: tystnad-app-macos-arm64
           path: build/tystnad.app.arm64.tar.gz
 
-  build-macos-intel:
-    name: Build macOS (Intel)
-    runs-on: macos-15
-    env:
-      ARCH: x86_64
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Install dependencies (macOS Intel)
-        run: |
-          brew update
-          brew install qt python cmake ninja
-          echo "CMAKE_PREFIX_PATH=$(brew --prefix qt)" >> $GITHUB_ENV
-
-      - name: Configure and Build (macOS Intel)
-        run: |
-          mkdir build
-          cd build
-          # Force x86_64 arch for cmake and ninja commands:
-          arch -x86_64 cmake .. -G Ninja -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH" -DCMAKE_BUILD_TYPE=Release
-          arch -x86_64 ninja
-
-      - name: Archive .app bundle
-        run: |
-          cd build
-          tar -czf tystnad.app.intel.tar.gz tystnad.app
-
-      - name: Upload .app as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: tystnad-app-macos-intel
-          path: build/tystnad.app.intel.tar.gz
-
   build-linux:
     name: Build Linux (Intel)
     runs-on: ubuntu-22.04
